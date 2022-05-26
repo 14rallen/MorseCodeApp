@@ -1,6 +1,6 @@
 //define interval in ms, dot = 1 unit, dash = 3 units, wordBeat = 7 units
-int dot = 200;            //time length of short beeps and space between parts of same letter
-int dash = dot * 3;       //time length of long beeps and between letters
+int dot = 200;            //time length of short beeps and space between parts of same character
+int dash = dot * 3;       //time length of long beeps and between character
 int wordBeat = dot * 7;   //time length between words
 
 bool blinking = false;
@@ -26,7 +26,6 @@ String morseCode[36];
 
 void setup() {
   Serial.begin(9600);
-  //SerialUSB.begin(9600);
 
   DefineMorseCode();
 
@@ -37,17 +36,21 @@ void setup() {
   delay(2000);
 }
 
-String incoming = "";
-char alphaNum;
+String incoming = ""; //full message to be stored here
+char alphaNum; //temp value for reading incoming data
 void loop() {
+  //checks for incoming data
   while(Serial.available() > 0){
     alphaNum = Serial.read();
+    //only allow alphanumeric values and spaces to be in message
     if(isAlpha(alphaNum) || isDigit(alphaNum) || alphaNum == ' '){
       incoming += alphaNum;
     }
   }
   message = incoming;
   incoming = "";
+  //convert message and flash LED lights while there is a valid message and lights
+  //are not already flashing
   while(message.length() > 0 && !blinking){
     convertMessageToMorse(message);
     morseToLED(morseMessage);
@@ -56,25 +59,27 @@ void loop() {
 
 void convertMessageToMorse(String m){
   m.toUpperCase();
+  //convert each character to decimal value
   for(int i = 0; i < m.length(); i++){
     char c = m.charAt(i);
     byte b = (byte)c;
     byte index = 0;
 
     if(b == decSp){
-      morseMessage[morseMessage.length() - 1] = '/';
+      morseMessage[morseMessage.length() - 1] = '/'; //if character is a space, replace last "space" of morseMessage with forward slash to indicate new word
       continue;
     }
-    else if(b >= dec0 && b <= dec9){
+    else if(b >= dec0 && b <= dec9){  //match numeric 0-9 decimal value to morseCode index
       index = b - dec0;
     }
-    else if(b >= decA && b <= decZ){
+    else if(b >= decA && b <= decZ){  ////match A-Z decimal value to morseCode index
       index = b - indexToDecimalRange;
     }
-    morseMessage += morseCode[index] + ' ';
+    morseMessage += morseCode[index] + ' '; //add a space at end of converted message to indicate new characer
   }
 }
 
+//takes converted message and displays as flashing LED
 void morseToLED(String m){
   Serial.println(m);
   blinking = true;
